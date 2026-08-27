@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CriteriaApi } from "../api/client";
 import type { CriteriaSet, CriteriaSetWithCriteria, Criterion } from "../api/types";
+import { IconEdit, IconPlus, IconTrash } from "../components/Icons";
+
+type ContextMenuState = { criterionId: string; x: number; y: number };
 
 type CriterionFormState = {
   stt: number;
@@ -69,6 +72,8 @@ export default function CriteriaPage() {
   const [error, setError] = useState("");
   const [newSetCode, setNewSetCode] = useState("");
   const [newSetName, setNewSetName] = useState("");
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const loadSets = async () => {
     const data = await CriteriaApi.listSets();
@@ -90,6 +95,22 @@ export default function CriteriaPage() {
   useEffect(() => {
     if (selectedId) loadDetail(selectedId);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const closeOnOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setContextMenu(null);
+    };
+    const closeOnEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContextMenu(null);
+    };
+    document.addEventListener("mousedown", closeOnOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [contextMenu]);
 
   const createSet = async () => {
     if (!newSetCode.trim() || !newSetName.trim()) return;
@@ -113,19 +134,16 @@ export default function CriteriaPage() {
     setSelectedId(created.id);
   };
 
-  const deleteSet = async () => {
-    if (!setDetail) return;
-    if (!confirm(`Xoá toàn bộ bộ tiêu chí "${setDetail.name}" và các tiêu chí bên trong?`)) return;
-    await CriteriaApi.deleteSet(setDetail.id);
-    setSelectedId("");
-    setSetDetail(null);
-    await loadSets();
-  };
-
   const startEdit = (c: Criterion) => {
     setEditingId(c.id);
     setEditForm(criterionToForm(c));
     setError("");
+    setContextMenu(null);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, c: Criterion) => {
+    e.preventDefault();
+    setContextMenu({ criterionId: c.id, x: e.clientX, y: e.clientY });
   };
 
   const saveEdit = async () => {
@@ -141,6 +159,7 @@ export default function CriteriaPage() {
   };
 
   const removeCriterion = async (id: string) => {
+    setContextMenu(null);
     if (!confirm("Xoá tiêu chí này?")) return;
     await CriteriaApi.deleteCriterion(id);
     if (selectedId) await loadDetail(selectedId);
@@ -174,11 +193,6 @@ export default function CriteriaPage() {
               ))}
             </select>
           </div>
-          {setDetail && (
-            <button className="danger" onClick={deleteSet}>
-              Xoá bộ tiêu chí này
-            </button>
-          )}
         </div>
 
         <details className="new-set-form">
@@ -223,7 +237,13 @@ export default function CriteriaPage() {
                     </td>
                   </tr>
                 ) : (
-                  <tr key={c.id}>
+                  <tr
+                    key={c.id}
+                    className="criterion-row"
+                    onDoubleClick={() => startEdit(c)}
+                    onContextMenu={(e) => handleContextMenu(e, c)}
+                    title="Double-click để sửa, chuột phải để xem tuỳ chọn"
+                  >
                     <td>{c.stt}</td>
                     <td>{c.name}</td>
                     <td>{c.weight != null ? `${(c.weight * 100).toFixed(0)}%` : "-"}</td>
@@ -231,9 +251,11 @@ export default function CriteriaPage() {
                     <td>{c.score_options.map((o) => o.label).join(" / ")}</td>
                     <td>{c.check_type === "keyword" ? "Tự động (từ khóa)" : "Thủ công"}</td>
                     <td>
-                      <button onClick={() => startEdit(c)}>Sửa</button>
-                      <button className="danger" onClick={() => removeCriterion(c.id)}>
-                        Xoá
+                      <button className="icon-btn" title="Sửa" onClick={() => startEdit(c)}>
+                        <IconEdit />
+                      </button>
+                      <button className="icon-btn danger" title="Xoá" onClick={() => removeCriterion(c.id)}>
+                        <IconTrash />
                       </button>
                     </td>
                   </tr>
@@ -241,6 +263,22 @@ export default function CriteriaPage() {
               )}
             </tbody>
           </table>
+
+          {contextMenu && (
+            <div ref={menuRef} className="context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+              <button
+                onClick={() => {
+                  const c = setDetail.criteria.find((x) => x.id === contextMenu.criterionId);
+                  if (c) startEdit(c);
+                }}
+              >
+                <IconEdit size={15} /> Sửa
+              </button>
+              <button className="danger" onClick={() => removeCriterion(contextMenu.criterionId)}>
+                <IconTrash size={15} /> Xoá
+              </button>
+            </div>
+          )}
 
           {addingNew ? (
             <div className="add-new-block">
@@ -260,7 +298,7 @@ export default function CriteriaPage() {
                 setAddingNew(true);
               }}
             >
-              + Thêm tiêu chí
+              <IconPlus size={15} /> Thêm tiêu chí
             </button>
           )}
         </section>
