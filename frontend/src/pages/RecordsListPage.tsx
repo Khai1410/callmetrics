@@ -5,6 +5,7 @@ import type { CriteriaSet, RecordItem, ScoringSession } from "../api/types";
 
 const STATUS_LABEL: Record<string, string> = {
   uploaded: "Đã tải lên, chờ xử lý",
+  fetching: "Đang tải ghi âm từ URL...",
   transcribing: "Đang chuyển giọng nói thành văn bản...",
   transcribed: "Đã có transcript, sẵn sàng chấm điểm",
   failed: "Lỗi xử lý",
@@ -14,7 +15,9 @@ export default function RecordsListPage() {
   const [sets, setSets] = useState<CriteriaSet[]>([]);
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [sessions, setSessions] = useState<ScoringSession[]>([]);
+  const [source, setSource] = useState<"file" | "url">("file");
   const [file, setFile] = useState<File | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState("");
   const [criteriaSetId, setCriteriaSetId] = useState("");
   const [uploadedBy, setUploadedBy] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -45,18 +48,31 @@ export default function RecordsListPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!file || !criteriaSetId) {
-      setError("Vui lòng chọn file ghi âm và bộ tiêu chí.");
+    if (!criteriaSetId) {
+      setError("Vui lòng chọn bộ tiêu chí.");
+      return;
+    }
+    if (source === "file" && !file) {
+      setError("Vui lòng chọn file ghi âm.");
+      return;
+    }
+    if (source === "url" && !recordingUrl.trim()) {
+      setError("Vui lòng dán URL ghi âm.");
       return;
     }
     setUploading(true);
     try {
-      await RecordsApi.upload(file, criteriaSetId, uploadedBy);
-      setFile(null);
-      (document.getElementById("file-input") as HTMLInputElement).value = "";
+      if (source === "file" && file) {
+        await RecordsApi.upload(file, criteriaSetId, uploadedBy);
+        setFile(null);
+        (document.getElementById("file-input") as HTMLInputElement).value = "";
+      } else {
+        await RecordsApi.uploadFromUrl(recordingUrl.trim(), criteriaSetId, uploadedBy);
+        setRecordingUrl("");
+      }
       await loadAll();
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? "Upload thất bại");
+      setError(err?.response?.data?.detail ?? "Không thể thêm bản ghi");
     } finally {
       setUploading(false);
     }
@@ -65,17 +81,45 @@ export default function RecordsListPage() {
   return (
     <div>
       <section className="card">
-        <h2>Tải lên bản ghi âm để chấm điểm</h2>
+        <h2>Thêm bản ghi âm để chấm điểm</h2>
+        <div className="source-toggle">
+          <button
+            type="button"
+            className={source === "file" ? "" : "secondary"}
+            onClick={() => setSource("file")}
+          >
+            Tải file lên
+          </button>
+          <button
+            type="button"
+            className={source === "url" ? "" : "secondary"}
+            onClick={() => setSource("url")}
+          >
+            Dán URL nghe online
+          </button>
+        </div>
         <form className="upload-form" onSubmit={handleUpload}>
-          <div className="field">
-            <label>File ghi âm (mp3, wav, m4a...)</label>
-            <input
-              id="file-input"
-              type="file"
-              accept=".mp3,.wav,.m4a,.ogg,.flac,.aac,.wma"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </div>
+          {source === "file" ? (
+            <div className="field">
+              <label>File ghi âm (mp3, wav, m4a...)</label>
+              <input
+                id="file-input"
+                type="file"
+                accept=".mp3,.wav,.m4a,.ogg,.flac,.aac,.wma"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          ) : (
+            <div className="field grow">
+              <label>URL nghe ghi âm online (lấy từ portal, không cần đăng nhập)</label>
+              <input
+                type="text"
+                value={recordingUrl}
+                onChange={(e) => setRecordingUrl(e.target.value)}
+                placeholder="https://portal.example.com/recordings/xxx.mp3?token=..."
+              />
+            </div>
+          )}
           <div className="field">
             <label>Loại cuộc gọi / bộ tiêu chí</label>
             <select value={criteriaSetId} onChange={(e) => setCriteriaSetId(e.target.value)}>
@@ -91,7 +135,7 @@ export default function RecordsListPage() {
             <input value={uploadedBy} onChange={(e) => setUploadedBy(e.target.value)} placeholder="vd: qa.hoa" />
           </div>
           <button type="submit" disabled={uploading}>
-            {uploading ? "Đang tải lên..." : "Tải lên"}
+            {uploading ? "Đang xử lý..." : source === "file" ? "Tải lên" : "Thêm từ URL"}
           </button>
           {error && <p className="error">{error}</p>}
         </form>
@@ -128,7 +172,9 @@ export default function RecordsListPage() {
                   <td>{session?.classification ?? "-"}</td>
                   <td>
                     <Link to={`/records/${r.id}`}>
-                      <button disabled={r.status === "uploaded" || r.status === "transcribing"}>Chấm điểm</button>
+                      <button disabled={r.status === "uploaded" || r.status === "fetching" || r.status === "transcribing"}>
+                        Chấm điểm
+                      </button>
                     </Link>
                   </td>
                 </tr>

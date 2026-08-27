@@ -35,6 +35,10 @@ export const RecordsApi = {
     form.append("uploaded_by", uploadedBy);
     return api.post<RecordItem>("/records", form).then((r) => r.data);
   },
+  uploadFromUrl: (url: string, criteriaSetId: string, uploadedBy: string) =>
+    api
+      .post<RecordItem>("/records/from-url", { url, criteria_set_id: criteriaSetId, uploaded_by: uploadedBy })
+      .then((r) => r.data),
   audioUrl: (id: string) => `/api/records/${id}/audio`,
   delete: (id: string) => api.delete(`/records/${id}`),
 };

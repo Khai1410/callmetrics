@@ -23,7 +23,9 @@ Dữ liệu tiêu chí trong `backend/app/seed/seed_data.json` (chuyển thể t
 
 ## Cách dùng
 
-1. **Tab "Chấm điểm"**: chọn file ghi âm (mp3/wav/m4a/ogg/flac/aac/wma), chọn bộ tiêu chí (CALL IN / CALL OUT), nhập tên người chấm, bấm Tải lên.
+1. **Tab "Chấm điểm"**: chọn bộ tiêu chí (CALL IN / CALL OUT), nhập tên người chấm, rồi chọn 1 trong 2 cách thêm bản ghi:
+   - **Tải file lên**: chọn file ghi âm (mp3/wav/m4a/ogg/flac/aac/wma) từ máy.
+   - **Dán URL nghe online**: dùng khi công ty chặn tải file — dán URL nghe trực tiếp lấy từ portal ghi âm (URL phải tự truy cập được, không cần đăng nhập/cookie — kiểm tra bằng cách mở URL đó ở trình duyệt ẩn danh, nếu vẫn nghe được thì dùng được). Backend sẽ tự tải file từ URL này về để xử lý, y hệt như trình duyệt "nghe online", không cần bấm nút Download nào.
 2. App tự động chuyển giọng nói → văn bản (trạng thái "Đang chuyển giọng nói..."). Khi xong, bấm "Chấm điểm" để vào trang chi tiết.
 3. Trang chi tiết: nghe lại ghi âm (audio player, click vào từng đoạn transcript để tua tới đó), tạo phiên chấm điểm. App sẽ tự điền sẵn điểm cho các tiêu chí có gắn nhãn **"Tự động kiểm tra"** (dựa trên đối chiếu từ khóa với transcript, kèm trích đoạn làm bằng chứng) — QA có thể sửa lại nếu auto-check chưa đúng. Các tiêu chí còn lại QA đọc transcript/nghe lại và tự chọn điểm.
 4. Điền phân loại nội dung cuộc gọi, tick các điểm không đạt (nếu có), nhận xét tổng thể, rồi "Hoàn tất chấm điểm" — app tự tính tổng điểm theo trọng số và xếp loại.
@@ -44,3 +46,4 @@ WHISPER_MODEL_SIZE=medium
 - File ghi âm lưu tại `./storage/audio` trên máy host (bind mount), xem/backup trực tiếp được.
 - Không có xác thực đăng nhập (nội bộ, tên người chấm chỉ là text tự nhập) — nếu triển khai ra ngoài môi trường tin cậy, cần thêm auth trước khi public port 8081/8000.
 - Transcribe chạy nền (background task) trong tiến trình backend, không dùng queue riêng (Celery/Redis) — phù hợp quy mô nhỏ/vừa; nếu tải cao (nhiều file cùng lúc) có thể cần nâng cấp sang hàng đợi riêng.
+- **Thêm bản ghi bằng URL**: backend tải file qua `POST /api/records/from-url`, giới hạn 300MB, timeout kết nối 15s, có chặn cơ bản SSRF (chỉ cho http/https, từ chối URL trỏ vào địa chỉ mạng nội bộ/loopback). Nếu công ty chặn download vì lý do bảo mật/tuân thủ dữ liệu khách hàng, nên xác nhận với IT/quản trị hệ thống ghi âm rằng việc app tự động lấy file qua URL công khai (không cần đăng nhập) là được phép, trước khi dùng chính thức.

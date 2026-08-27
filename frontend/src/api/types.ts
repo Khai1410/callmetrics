@@ -37,7 +37,7 @@ export interface CriteriaSetWithCriteria extends CriteriaSet {
   criteria: Criterion[];
 }
 
-export type RecordStatus = "uploaded" | "transcribing" | "transcribed" | "failed";
+export type RecordStatus = "uploaded" | "fetching" | "transcribing" | "transcribed" | "failed";
 
 export interface RecordItem {
   id: string;

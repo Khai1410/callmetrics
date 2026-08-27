@@ -25,6 +25,7 @@ def gen_uuid():
 
 class RecordStatus(str, enum.Enum):
     UPLOADED = "uploaded"
+    FETCHING = "fetching"
     TRANSCRIBING = "transcribing"
     TRANSCRIBED = "transcribed"
     FAILED = "failed"

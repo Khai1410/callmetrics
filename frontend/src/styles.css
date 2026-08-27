@@ -299,6 +299,12 @@ button.danger:hover:not(:disabled) {
 
 /* ---------- Upload form ---------- */
 
+.source-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .upload-form {
   display: flex;
   gap: 16px;
@@ -399,6 +405,7 @@ button.danger:hover:not(:disabled) {
   color: var(--warning);
 }
 
+.badge-fetching,
 .badge-transcribing {
   background: var(--info-soft);
   border-color: var(--info-soft-border);

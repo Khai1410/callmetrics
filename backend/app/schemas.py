@@ -81,6 +81,13 @@ class CriteriaSetWithCriteria(CriteriaSetOut):
     criteria: list[CriterionOut] = []
 
 
+class RecordFromUrlCreate(BaseModel):
+    url: str
+    criteria_set_id: str
+    uploaded_by: Optional[str] = None
+    filename: Optional[str] = None
+
+
 class RecordOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str

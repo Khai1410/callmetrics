@@ -23,7 +23,7 @@ export default function RecordScorePage() {
     loadRecord();
     const interval = setInterval(async () => {
       const rec = await loadRecord();
-      if (rec && rec.status !== "transcribing" && rec.status !== "uploaded") {
+      if (rec && rec.status !== "transcribing" && rec.status !== "uploaded" && rec.status !== "fetching") {
         clearInterval(interval);
       }
     }, 4000);
@@ -121,6 +121,7 @@ export default function RecordScorePage() {
         <p className="muted">Bộ tiêu chí: {record.criteria_set.name}</p>
         <p className="muted">Trạng thái: {record.status}</p>
 
+        {record.status === "fetching" && <p>Đang tải ghi âm từ URL, vui lòng chờ...</p>}
         {record.status === "transcribing" && <p>Đang chuyển giọng nói thành văn bản, vui lòng chờ...</p>}
         {record.status === "failed" && <p className="error">Lỗi: {record.error_message}</p>}
 

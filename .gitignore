@@ -6,3 +6,4 @@ __pycache__/
 storage/audio/*
 !storage/audio/.gitkeep
 scripts/out.txt
+Screenshot_6.png
