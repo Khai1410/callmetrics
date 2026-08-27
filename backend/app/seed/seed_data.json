@@ -1,0 +1,254 @@
+{
+  "criteria_sets": [
+    {
+      "code": "CALL_OUT",
+      "name": "CALL OUT",
+      "max_score": 5,
+      "thresholds": [
+        {"min": 5, "label": "Xuất sắc"},
+        {"min": 4, "label": "Tốt"},
+        {"min": 3, "label": "Đạt yêu cầu"},
+        {"min": 2, "label": "Đạt một phần"},
+        {"min": 0, "label": "Không đạt"}
+      ],
+      "call_content_types": ["CHIẾN DỊCH", "TƯ VẤN ĐỔI QUÀ", "NHẮC TÍCH ĐIỂM", "KS KTTT LẦN ĐẦU", "NHẮC MUA HÀNG", "MUA HÀNG", "MISS CALL", "MISS WEB", "KHIẾU NẠI"],
+      "failed_point_tags": [
+        "Kỹ năng giao tiếp (lỗi diễn đạt, tốc độ, tone giọng, ngắt quãng, ngập ngừng, lặp thông tin)",
+        "Thực hiện thiếu câu hỏi theo kịch bản yêu cầu",
+        "Lời khuyên/hướng dẫn sử dụng sản phẩm chưa sát với vấn đề KH đang gặp/quan tâm",
+        "CT KHTT",
+        "Hệ thống"
+      ],
+      "criteria": [
+        {
+          "stt": 1,
+          "name": "Chào và giới thiệu danh tính, lý do gọi cho khách hàng",
+          "description": "5 điểm: Chào hỏi chuyên nghiệp, giọng nói tự tin, năng lượng. Giới thiệu đầy đủ và nêu lý do gọi một cách ngắn gọn, hấp dẫn, tạo cảm giác đây là một cuộc gọi mang lại giá trị, khiến Khách hàng tò mò và sẵn sàng lắng nghe.\n\n3 điểm: Chào hỏi đủ thông tin theo kịch bản, giọng nói rõ ràng nhưng còn đều đều, máy móc. Khách hàng hiểu lý do gọi nhưng chưa cảm thấy bị thu hút đặc biệt.\n\n1 điểm: Mở đầu lúng túng, thiếu thông tin (tên, công ty), nói quá nhanh hoặc lí nhí. Lý do gọi không rõ ràng, khiến Khách hàng phải hỏi lại \"Ai đấy?\" hoặc \"Gọi có việc gì?\".",
+          "weight": null,
+          "include_in_total": false,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Lời chào", "keywords": ["xin chào", "chào anh", "chào chị", "chào em", "chào cô", "chào chú", "alo"], "required": true},
+              {"name": "Giới thiệu danh tính", "keywords": ["em là", "tôi là", "em tên", "gọi đến từ", "gọi từ", "bên em"], "required": true},
+              {"name": "Lý do gọi", "keywords": ["gọi cho", "lý do", "muốn trao đổi", "muốn tư vấn", "liên hệ với"], "required": false}
+            ],
+            "score_full": 5,
+            "score_partial": 3,
+            "score_none": 1
+          }
+        },
+        {
+          "stt": 2,
+          "name": "1. Tuân thủ yêu cầu kịch bản",
+          "description": "5 điểm: Tuân thủ đầy đủ các bước và nội dung chính trong kịch bản phân luồng; Triển khai tự nhiên, mạch lạc, dễ hiểu, không khiến khách cảm thấy bị \"hỏi – đáp máy móc\"; Linh hoạt xử lý tốt khi có tình huống phát sinh, vẫn giữ đúng định hướng cuộc gọi.\n\n3 điểm: Thực hiện kịch bản ở mức cơ bản, còn máy móc hoặc cứng nhắc; Khi có tình huống phát sinh, xử lý được nhưng thiếu tự nhiên hoặc làm rối luồng tư vấn; Có thể bỏ sót 1–2 chi tiết yêu cầu kịch bản.\n\n1 điểm: Lệch kịch bản, bỏ sót các phần quan trọng hoặc triển khai khiến khách khó hiểu / bị rối; Thiếu linh hoạt, lúng túng khi khách hỏi ngoài nội dung.\n\n0 điểm: Không tuân thủ kịch bản hoặc nói sai luồng xử lý. Làm cuộc gọi mất kiểm soát, kéo dài.",
+          "weight": 0.2,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}, {"value": 0, "label": "0"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 3,
+          "name": "2. Đánh giá tư vấn kiến thức về sản phẩm và lời khuyên phù hợp với vấn đề/hoàn cảnh của khách hàng",
+          "description": "5 điểm: Hiểu rõ đặc điểm, công dụng, cách dùng và giới hạn của sản phẩm; Đặt câu hỏi khai thác đúng trọng tâm để xác định vấn đề khách hàng; Lời khuyên phù hợp với nhu cầu, tình trạng và mối quan tâm cụ thể của khách; Biết kết nối sản phẩm với lợi ích thực tế, dùng ví dụ hoặc so sánh dễ hiểu.\n\n3 điểm: Biết sản phẩm ở mức cơ bản, truyền đạt thông tin đúng nhưng chưa liên kết rõ với vấn đề cụ thể của khách; Tư vấn thiên về mô tả sản phẩm hơn là giải pháp cho khách.\n\n1 điểm: Cung cấp thông tin sai lệch hoặc gây hiểu nhầm; Không khai thác nhu cầu khách hàng, nói sai hoặc trái ngược vấn đề khách quan tâm; Kiến thức sản phẩm còn hổng hoặc nhầm lẫn; Không xác định đúng vấn đề khách hàng, lời khuyên thiếu liên quan.",
+          "weight": 0.25,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 4,
+          "name": "3. Thông tin liên quan chương trình đang áp dụng",
+          "description": "5 điểm: Trình bày đầy đủ, chính xác chương trình ưu đãi áp dụng cho số điện thoại / tài khoản khách hàng hiện tại; Nêu rõ thời gian hết hạn, số suất còn lại, giá trị ưu đãi; Có lời dặn rõ ràng, chân thành để khách hàng tận dụng ưu đãi tốt nhất.\n\n3 điểm: Cung cấp đủ thông tin chính (ưu đãi, thời hạn), nhưng có thể thiếu chi tiết nhỏ; Truyền đạt được ưu đãi cơ bản, nhưng thông tin chưa cá nhân hóa theo từng số điện thoại.\n\n1 điểm: Không nhắc đến thời gian hết hạn hoặc số suất tối đa khiến khách không hiểu rõ giá trị chương trình.\n\n0 điểm: Không đề cập hoặc truyền đạt sai chương trình ưu đãi của khách.",
+          "weight": 0.1,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}, {"value": 0, "label": "0"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Nhắc chương trình/ưu đãi", "keywords": ["chương trình", "ưu đãi", "khách hàng thân thiết", "khtt"], "required": true},
+              {"name": "Thời hạn", "keywords": ["hết hạn", "thời hạn", "đến ngày", "trước ngày"], "required": true},
+              {"name": "Số suất", "keywords": ["số suất", "suất còn lại", "số lượng có hạn"], "required": false}
+            ],
+            "score_full": 5,
+            "score_partial": 3,
+            "score_none": 0
+          }
+        },
+        {
+          "stt": 5,
+          "name": "4. Kỹ năng giao tiếp, tốc độ, diễn đạt trong call",
+          "description": "5 điểm: Ngữ điệu tự nhiên, âm lượng rõ ràng, tốc độ nói linh hoạt theo phản ứng khách. Diễn đạt mạch lạc, dễ hiểu, có điểm nhấn, thu hút người nghe. Xử lý tình huống nhanh, khéo léo, bình tĩnh, tạo được sự tin tưởng và thiện cảm. Giữ luồng giao tiếp tự nhiên, thân thiện, chuyên nghiệp. Vận dụng Q&A/kiến thức lưu loát, cách sắp xếp ý logic với sự việc/sự vụ.\n\n3 điểm: Giao tiếp ở mức cơ bản, đủ nghe hiểu nhưng thiếu cảm xúc, chưa tạo được thiện cảm rõ rệt. Ngữ điệu, tốc độ, cách nói ở mức chấp nhận được. Diễn đạt rõ ý nhưng còn khô hoặc thiếu cảm xúc. Xử lý tình huống còn lúng túng, phản ứng chậm, chưa chốt được vấn đề.\n\n1 điểm: Khi gặp tình huống phát sinh, thiếu bình tĩnh, xử lý không phù hợp, làm rối khách. Diễn đạt thiếu mạch lạc, nói vòng vo hoặc ngập ngừng. Giao tiếp kém, thái độ không phù hợp hoặc gây ấn tượng tiêu cực với khách hàng, thiếu kính ngữ, thiếu chủ ngữ. Ngữ điệu không phù hợp, nói quá nhanh, quá nhỏ hoặc lặp ý nhiều. Diễn đạt rời rạc, sai thông tin, gây hiểu nhầm hoặc khó chịu cho khách. Không kiểm soát được tình huống, dẫn đến mất kết nối với khách hàng.",
+          "weight": 0.3,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 6,
+          "name": "5. Phần hệ thống",
+          "description": "5 điểm: Nhập link đúng và đầy đủ theo quy định; Cập nhật đầy đủ, rõ ràng, súc tích, chính xác mọi thông tin khách hàng và trạng thái xử lý; Gắn logcall, chuyển case đúng đầu mối, đúng thời gian.\n\n3 điểm: Nhập đúng form, có đủ thông tin cơ bản nhưng nội dung chưa súc tích, chưa chi tiết hoặc chưa cụ thể; Dữ liệu vẫn cần QA chỉnh sửa/bổ sung thêm.\n\n2 điểm: Cập nhật thiếu thông tin khách hàng cung cấp. Sai form yêu cầu hoặc không nhập ngày quan tâm sản phẩm / thời điểm sự vụ.\n\n1 điểm: Nhập dữ liệu nhưng ghi sai thông tin khách hàng cung cấp.\n\n0 điểm: Không thực hiện hoặc làm sai hoàn toàn quy trình: Không nhập link báo cáo / Không ghi chủ đề đúng quy định / Không điền thông tin khách hàng đã khai thác / Không tạo case hoặc không chuyển đúng đầu mối / Không cập nhật trạng thái case hoặc không gắn logcall đúng quy định.",
+          "weight": 0.15,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 2, "label": "2"}, {"value": 1, "label": "1"}, {"value": 0, "label": "0"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 7,
+          "name": "Chào tạm biệt KH và mời liên lạc nếu cần hỗ trợ thêm thông tin, giới thiệu nhận diện thương hiệu, tổng đài",
+          "description": "5 điểm: Thực hiện đạt yêu cầu, có sự thông báo với khách hàng.\n0 điểm: Kết thúc trước khách hàng, không có sự thông báo hoặc chào kết thúc.",
+          "weight": null,
+          "include_in_total": false,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 0, "label": "0"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Lời chào tạm biệt", "keywords": ["cảm ơn", "tạm biệt", "chào tạm biệt", "chúc"], "required": true},
+              {"name": "Mời liên hệ lại / tổng đài", "keywords": ["tổng đài", "hotline", "liên hệ lại", "cần hỗ trợ"], "required": true}
+            ],
+            "score_full": 5,
+            "score_partial": 0,
+            "score_none": 0
+          }
+        }
+      ]
+    },
+    {
+      "code": "CALL_IN",
+      "name": "CALL IN",
+      "max_score": 5,
+      "thresholds": [
+        {"min": 5, "label": "Xuất sắc"},
+        {"min": 4, "label": "Tốt"},
+        {"min": 3, "label": "Đạt yêu cầu"},
+        {"min": 2, "label": "Đạt một phần"},
+        {"min": 0, "label": "Không đạt"}
+      ],
+      "call_content_types": ["CHIẾN DỊCH", "TƯ VẤN ĐỔI QUÀ", "NHẮC TÍCH ĐIỂM", "KS KTTT LẦN ĐẦU", "NHẮC MUA HÀNG", "MUA HÀNG", "MISS CALL", "MISS WEB", "KHIẾU NẠI"],
+      "failed_point_tags": [
+        "Kỹ năng giao tiếp (lỗi diễn đạt, tốc độ, tone giọng, ngắt quãng, ngập ngừng, lặp thông tin)",
+        "Thực hiện thiếu câu hỏi theo kịch bản yêu cầu",
+        "Lời khuyên/hướng dẫn sử dụng sản phẩm chưa sát với vấn đề KH đang gặp/quan tâm",
+        "CT KHTT",
+        "Hệ thống"
+      ],
+      "criteria": [
+        {
+          "stt": 1,
+          "name": "Chào và giới thiệu danh tính, lý do gọi cho khách hàng",
+          "description": "5 điểm: Chào hỏi chuyên nghiệp, giọng nói tự tin, năng lượng. Giới thiệu đầy đủ và nêu lý do gọi một cách ngắn gọn, hấp dẫn, tạo cảm giác đây là một cuộc gọi mang lại giá trị, khiến Khách hàng tò mò và sẵn sàng lắng nghe.\n\n3 điểm: Chào hỏi đủ thông tin theo kịch bản, giọng nói rõ ràng nhưng còn đều đều, máy móc. Khách hàng hiểu lý do gọi nhưng chưa cảm thấy bị thu hút đặc biệt.\n\n1 điểm: Mở đầu lúng túng, thiếu thông tin (tên, công ty), nói quá nhanh hoặc lí nhí. Lý do gọi không rõ ràng, khiến Khách hàng phải hỏi lại \"Ai đấy?\" hoặc \"Gọi có việc gì?\".",
+          "weight": null,
+          "include_in_total": false,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Lời chào", "keywords": ["xin chào", "chào anh", "chào chị", "chào em", "chào cô", "chào chú", "alo"], "required": true},
+              {"name": "Giới thiệu danh tính", "keywords": ["em là", "tôi là", "em tên", "tổng đài viên", "bên em"], "required": true},
+              {"name": "Lý do/hỗ trợ gì", "keywords": ["hỗ trợ", "giúp gì", "cần hỗ trợ", "vấn đề gì"], "required": false}
+            ],
+            "score_full": 5,
+            "score_partial": 3,
+            "score_none": 1
+          }
+        },
+        {
+          "stt": 2,
+          "name": "Nắm vấn đề đúng ngay từ đầu, phương án giải quyết vấn đề triệt để",
+          "description": "5 điểm: (Nắm đúng – Trả lời gọn – Giải quyết triệt để) Xác định đúng và nhanh vấn đề khách đang gặp. Lắng nghe chủ động, không cắt lời; biết đặt 1–2 câu hỏi làm rõ khi cần. Phản hồi ngắn, rõ, đúng trọng tâm, không vòng vo. Đưa ra giải pháp đủ – rõ – dễ hiểu, xử lý dứt điểm ngay trong cuộc gọi. Nếu là vấn đề cần chuyển cấp, thông báo lộ trình + thời gian cụ thể để khách an tâm. Kết thúc bằng xác nhận lại để chắc chắn khách đã hiểu & hài lòng.\n\n3 điểm: Nắm được nhưng chưa sâu – Trả lời đủ – Chưa triệt để. Hiểu được phần chính của vấn đề nhưng chưa khai thác đầy đủ. Phản hồi đúng ý nhưng còn dài dòng hoặc thiếu logic. Có đưa giải pháp nhưng chưa làm khách rõ ràng, hoặc còn thiếu bước xác nhận lại. Xử lý được phần lớn vấn đề nhưng chưa tạo cảm giác yên tâm hoàn toàn.\n\n1 điểm: (Hiểu sai – Trả lời không rõ – Không xử lý xong) Hiểu sai vấn đề hoặc suy đoán vội. Không hỏi lại/không làm rõ thông tin quan trọng. Trả lời dài dòng, lệch nội dung, hoặc không đúng câu hỏi của khách. Không đưa ra giải pháp hoặc chỉ hứa hẹn chung chung. Khách kết thúc cuộc gọi vẫn còn băn khoăn hoặc không được giải quyết.",
+          "weight": 0.3,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 3,
+          "name": "Chủ động hỏi thăm quá trình sử dụng / tuân thủ kịch bản áp dụng từng khách hàng",
+          "description": "5 điểm: Chủ động hỏi thăm rõ ràng, tự nhiên, đúng thời điểm. Câu hỏi hướng vào trải nghiệm thực tế: hiệu quả, tần suất dùng, cảm nhận. Ngữ điệu quan tâm, không máy móc. Biết đào sâu một bước dựa trên câu trả lời của khách. Sử dụng đúng thông tin đã có trên hệ thống (sản phẩm đã mua, thời gian dùng, mục tiêu sức khoẻ, vấn đề đang quan tâm...). Cá nhân hoá phù hợp hoàn cảnh.\n\n3 điểm: Có hỏi thăm nhưng chỉ ở mức cơ bản, chưa khai thác sâu, chưa tạo cảm giác chăm sóc. Thông tin tư vấn chưa cá nhân hoá theo từng khách hàng. Tư vấn đúng sản phẩm nhưng chưa khớp sâu với tình trạng khách. Câu hỏi chung chung.\n\n1 điểm: Không hỏi thăm trải nghiệm hoặc không sử dụng dữ liệu đã có trên hệ thống, hỏi thừa hỏi lặp. Hỏi thăm cho có, sai thời điểm, hoặc không liên quan. Giọng đọc như đọc kịch bản. Tư vấn lệch mục tiêu khách hoặc nói quá nhiều tính năng không liên quan.",
+          "weight": 0.2,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 4,
+          "name": "Cung cấp CT KHTT",
+          "description": "5 điểm: Cung cấp đầy đủ nội dung chương trình, số suất tối đa, thời hạn chương trình, quyền lợi chương trình.\n\n3 điểm: Có cung cấp nội dung chương trình KHTT nhưng chưa sát với số điện thoại của khách hàng.\n\n0 điểm: Không cung cấp chương trình khách hàng thân thiết / cung cấp sai nội dung KHTT (số suất / sai thời gian).",
+          "weight": 0.1,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 0, "label": "0"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Nhắc chương trình/ưu đãi", "keywords": ["chương trình", "ưu đãi", "khách hàng thân thiết", "khtt"], "required": true},
+              {"name": "Thời hạn", "keywords": ["hết hạn", "thời hạn", "đến ngày", "trước ngày"], "required": true},
+              {"name": "Số suất", "keywords": ["số suất", "suất còn lại", "số lượng có hạn"], "required": false}
+            ],
+            "score_full": 5,
+            "score_partial": 3,
+            "score_none": 0
+          }
+        },
+        {
+          "stt": 5,
+          "name": "4. Kỹ năng giao tiếp, tốc độ, diễn đạt trong call",
+          "description": "5 điểm: Ngữ điệu tự nhiên, âm lượng rõ ràng, tốc độ nói linh hoạt theo phản ứng khách. Diễn đạt mạch lạc, dễ hiểu, có điểm nhấn, thu hút người nghe. Xử lý tình huống nhanh, khéo léo, bình tĩnh, tạo được sự tin tưởng và thiện cảm. Giữ luồng giao tiếp tự nhiên, thân thiện, chuyên nghiệp. Vận dụng Q&A/kiến thức lưu loát, cách sắp xếp ý logic với sự việc/sự vụ.\n\n3 điểm: Giao tiếp ở mức cơ bản, đủ nghe hiểu nhưng thiếu cảm xúc, chưa tạo được thiện cảm rõ rệt. Ngữ điệu, tốc độ, cách nói ở mức chấp nhận được. Diễn đạt rõ ý nhưng còn khô hoặc thiếu cảm xúc. Xử lý tình huống còn lúng túng, phản ứng chậm, chưa chốt được vấn đề.\n\n1 điểm: Khi gặp tình huống phát sinh, thiếu bình tĩnh, xử lý không phù hợp, làm rối khách. Diễn đạt thiếu mạch lạc, nói vòng vo hoặc ngập ngừng. Giao tiếp kém, thái độ không phù hợp hoặc gây ấn tượng tiêu cực với khách hàng, thiếu kính ngữ, thiếu chủ ngữ. Ngữ điệu không phù hợp, nói quá nhanh, quá nhỏ hoặc lặp ý nhiều. Diễn đạt rời rạc, sai thông tin, gây hiểu nhầm hoặc khó chịu cho khách. Không kiểm soát được tình huống, dẫn đến mất kết nối với khách hàng.",
+          "weight": 0.25,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 1, "label": "1"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 6,
+          "name": "5. Phần hệ thống",
+          "description": "5 điểm: Nhập link đúng và đầy đủ theo quy định; Cập nhật đầy đủ, rõ ràng, súc tích, chính xác mọi thông tin khách hàng và trạng thái xử lý; Gắn logcall, chuyển case đúng đầu mối, đúng thời gian.\n\n3 điểm: Nhập đúng form, có đủ thông tin cơ bản nhưng nội dung chưa súc tích, chưa chi tiết hoặc chưa cụ thể; Dữ liệu vẫn cần QA chỉnh sửa/bổ sung thêm.\n\n2 điểm: Cập nhật thiếu thông tin khách hàng cung cấp. Sai form yêu cầu hoặc không nhập ngày quan tâm sản phẩm / thời điểm sự vụ.\n\n0 điểm: Không thực hiện hoặc làm sai hoàn toàn quy trình, hoặc nhập dữ liệu nhưng ghi sai thông tin khách hàng cung cấp.",
+          "weight": 0.15,
+          "include_in_total": true,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 3, "label": "3"}, {"value": 2, "label": "2"}, {"value": 0, "label": "0"}],
+          "check_type": "manual",
+          "check_config": null
+        },
+        {
+          "stt": 7,
+          "name": "Chào tạm biệt KH và mời liên lạc nếu cần hỗ trợ thêm thông tin, giới thiệu nhận diện thương hiệu, tổng đài",
+          "description": "5 điểm: Thực hiện đạt yêu cầu, có sự thông báo với khách hàng.\n0 điểm: Kết thúc trước khách hàng, không có sự thông báo hoặc chào kết thúc.",
+          "weight": null,
+          "include_in_total": false,
+          "selection_type": "single",
+          "score_options": [{"value": 5, "label": "5"}, {"value": 0, "label": "0"}],
+          "check_type": "keyword",
+          "check_config": {
+            "groups": [
+              {"name": "Lời chào tạm biệt", "keywords": ["cảm ơn", "tạm biệt", "chào tạm biệt", "chúc"], "required": true},
+              {"name": "Mời liên hệ lại / tổng đài", "keywords": ["tổng đài", "hotline", "liên hệ lại", "cần hỗ trợ"], "required": true}
+            ],
+            "score_full": 5,
+            "score_partial": 0,
+            "score_none": 0
+          }
+        }
+      ]
+    }
+  ]
+}

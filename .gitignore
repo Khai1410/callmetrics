@@ -1,0 +1,8 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.env
+storage/audio/*
+!storage/audio/.gitkeep
+scripts/out.txt
