@@ -29,8 +29,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    # Port 8000 is only used internally by the frontend's nginx proxy.
+    # Uncomment below if you need to call the API directly for debugging:
+    # ports:
+    #   - "${BACKEND_PORT:-8000}:8000"
 
   frontend:
     build: ./frontend
@@ -38,7 +40,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "8081:80"
+      - "${FRONTEND_PORT:-8081}:80"
 
 volumes:
   db_data:

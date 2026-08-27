@@ -10,12 +10,17 @@
 
 ## Chạy ứng dụng
 
+**Cách 1 — chỉ cần cài [Docker Desktop](https://www.docker.com/products/docker-desktop/), sau đó double-click `start.bat`** (Windows). App sẽ tự build và khởi động toàn bộ (Postgres + backend + frontend). Lần đầu chạy sẽ mất vài phút để tải/build image, các lần sau nhanh hơn nhiều nhờ cache. Bấm `stop.bat` để tắt.
+
+**Cách 2 — dòng lệnh** (mọi hệ điều hành, tương đương `start.sh`):
+
 ```bash
 docker compose up -d --build
 ```
 
-- Giao diện: http://localhost:8081
-- API: http://localhost:8000/api (chỉ cần khi debug trực tiếp, frontend đã tự gọi qua proxy `/api`)
+Sau khi chạy xong, mở trình duyệt vào **http://localhost:8081**.
+
+Nếu port 8081 bị trùng với ứng dụng khác trên máy, copy `.env.example` thành `.env` rồi sửa `FRONTEND_PORT=` sang port khác, chạy lại `start.bat`/lệnh trên là xong — không cần sửa gì trong `docker-compose.yml`.
 
 Lần đầu transcribe một bản ghi, container backend sẽ tải model Whisper (`small` mặc định, ~500MB) về, có thể mất vài phút; các lần sau dùng cache (volume `whisper_cache`).
 
