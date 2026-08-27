@@ -510,6 +510,10 @@ button.danger:hover:not(:disabled) {
   border-left-color: var(--success);
 }
 
+.criterion-block:has(.ai-tag) {
+  border-left-color: var(--primary);
+}
+
 .criterion-block:focus-within {
   box-shadow: var(--shadow-sm);
 }
@@ -546,6 +550,12 @@ button.danger:hover:not(:disabled) {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.auto-tag.ai-tag {
+  background: var(--primary-soft);
+  border-color: var(--primary-soft-border);
+  color: var(--primary);
 }
 
 details {

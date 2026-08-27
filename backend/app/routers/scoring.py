@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import models, schemas
+from .. import llm_scoring, models, schemas
 from ..database import get_db
 from ..scoring_engine import auto_score_criterion, classify, compute_total
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["scoring"])
 
@@ -14,24 +18,47 @@ def create_scoring_session(record_id: str, payload: schemas.ScoringSessionCreate
     if not record:
         raise HTTPException(404, "Record not found")
 
-    session = models.ScoringSession(
-        record_id=record.id,
-        criteria_set_id=record.criteria_set_id,
-        scorer_name=payload.scorer_name,
-        status=models.SessionStatus.DRAFT.value,
-    )
-    db.add(session)
-    db.flush()
-
-    transcript_text = record.transcript.text if record.transcript else ""
+    criteria_set = db.get(models.CriteriaSet, record.criteria_set_id)
     criteria = (
         db.query(models.Criterion)
         .filter_by(criteria_set_id=record.criteria_set_id, is_active=True)
         .order_by(models.Criterion.stt)
         .all()
     )
+    transcript_text = record.transcript.text if record.transcript else ""
+
+    ai_result = None
+    if llm_scoring.is_configured():
+        try:
+            ai_result = llm_scoring.score_with_ai(
+                criteria,
+                transcript_text,
+                criteria_set.name,
+                criteria_set.call_content_types,
+                criteria_set.failed_point_tags,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("AI scoring raised unexpectedly, falling back to rule-based scoring")
+
+    session = models.ScoringSession(
+        record_id=record.id,
+        criteria_set_id=record.criteria_set_id,
+        scorer_name=payload.scorer_name,
+        status=models.SessionStatus.DRAFT.value,
+    )
+    if ai_result:
+        session.call_content_type = ai_result.get("call_content_type")
+        session.failed_point_tags = ai_result.get("failed_point_tags") or []
+        session.overall_comment = ai_result.get("overall_comment")
+    db.add(session)
+    db.flush()
+
     for criterion in criteria:
-        auto_score, evidence = auto_score_criterion(criterion, transcript_text)
+        if ai_result and criterion.id in ai_result["items"]:
+            auto_score = ai_result["items"][criterion.id]["score"]
+            evidence = f"[AI] {ai_result['items'][criterion.id]['evidence']}"
+        else:
+            auto_score, evidence = auto_score_criterion(criterion, transcript_text)
         item = models.ScoreItem(
             session_id=session.id,
             criterion_id=criterion.id,

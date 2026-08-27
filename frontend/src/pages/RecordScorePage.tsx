@@ -170,7 +170,11 @@ export default function RecordScorePage() {
                     {criterion.include_in_total && criterion.weight != null && (
                       <span className="weight-tag">Trọng số {(criterion.weight * 100).toFixed(0)}%</span>
                     )}
-                    {criterion.check_type === "keyword" && <span className="auto-tag">Tự động kiểm tra</span>}
+                    {item?.auto_evidence?.startsWith("[AI]") ? (
+                      <span className="auto-tag ai-tag">Chấm bởi AI</span>
+                    ) : (
+                      criterion.check_type === "keyword" && <span className="auto-tag">Tự động kiểm tra</span>
+                    )}
                   </div>
                   <details>
                     <summary>Xem thang điểm chi tiết</summary>
@@ -179,7 +183,8 @@ export default function RecordScorePage() {
 
                   {item?.auto_evidence && (
                     <div className="evidence">
-                      <em>Kết quả kiểm tra tự động:</em> {item.auto_evidence}
+                      <em>{item.auto_evidence.startsWith("[AI]") ? "Nhận xét của AI:" : "Kết quả kiểm tra tự động:"}</em>{" "}
+                      {item.auto_evidence.replace(/^\[AI\]\s*/, "")}
                     </div>
                   )}
 
