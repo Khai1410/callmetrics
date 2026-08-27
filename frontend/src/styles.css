@@ -704,44 +704,7 @@ details summary:hover {
 }
 
 .criterion-row {
-  cursor: pointer;
   user-select: none;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  margin-right: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  box-shadow: none;
-}
-
-.icon-btn:last-child {
-  margin-right: 0;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--primary-soft);
-  border-color: var(--primary-soft-border);
-  color: var(--primary);
-  box-shadow: none;
-}
-
-.icon-btn.danger {
-  background: var(--surface);
-  color: var(--danger);
-}
-
-.icon-btn.danger:hover:not(:disabled) {
-  background: var(--danger-soft);
-  border-color: var(--danger-soft-border);
-  color: var(--danger);
 }
 
 .context-menu {

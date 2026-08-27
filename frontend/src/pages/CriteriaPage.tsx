@@ -219,14 +219,13 @@ export default function CriteriaPage() {
                 <th>Tính vào tổng</th>
                 <th>Thang điểm</th>
                 <th>Kiểm tra</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
               {setDetail.criteria.map((c) =>
                 editingId === c.id ? (
                   <tr key={c.id} className="editing-row">
-                    <td colSpan={7}>
+                    <td colSpan={6}>
                       <CriterionEditor form={editForm} setForm={setEditForm} />
                       <div className="edit-actions">
                         <button onClick={saveEdit}>Lưu</button>
@@ -240,9 +239,8 @@ export default function CriteriaPage() {
                   <tr
                     key={c.id}
                     className="criterion-row"
-                    onDoubleClick={() => startEdit(c)}
                     onContextMenu={(e) => handleContextMenu(e, c)}
-                    title="Double-click để sửa, chuột phải để xem tuỳ chọn"
+                    title="Chuột phải để Sửa/Xoá"
                   >
                     <td>{c.stt}</td>
                     <td>{c.name}</td>
@@ -250,14 +248,6 @@ export default function CriteriaPage() {
                     <td>{c.include_in_total ? "Có" : "Không"}</td>
                     <td>{c.score_options.map((o) => o.label).join(" / ")}</td>
                     <td>{c.check_type === "keyword" ? "Tự động (từ khóa)" : "Thủ công"}</td>
-                    <td>
-                      <button className="icon-btn" title="Sửa" onClick={() => startEdit(c)}>
-                        <IconEdit />
-                      </button>
-                      <button className="icon-btn danger" title="Xoá" onClick={() => removeCriterion(c.id)}>
-                        <IconTrash />
-                      </button>
-                    </td>
                   </tr>
                 ),
               )}
