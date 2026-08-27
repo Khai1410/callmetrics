@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CriteriaApi, RecordsApi, ScoringApi } from "../api/client";
-import type { CriteriaSetWithCriteria, RecordDetail, ScoringSession } from "../api/types";
+import type { CriteriaSet, CriteriaSetWithCriteria, RecordDetail, ScoringSession } from "../api/types";
 
 export default function RecordScorePage() {
   const { id } = useParams<{ id: string }>();
   const [record, setRecord] = useState<RecordDetail | null>(null);
   const [criteriaSet, setCriteriaSet] = useState<CriteriaSetWithCriteria | null>(null);
+  const [allSets, setAllSets] = useState<CriteriaSet[]>([]);
   const [session, setSession] = useState<ScoringSession | null>(null);
   const [scorerName, setScorerName] = useState("");
   const [error, setError] = useState("");
+  const [editingSet, setEditingSet] = useState(false);
+  const [pendingSetId, setPendingSetId] = useState("");
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const loadRecord = async () => {
@@ -18,6 +21,10 @@ export default function RecordScorePage() {
     setRecord(rec);
     return rec;
   };
+
+  useEffect(() => {
+    CriteriaApi.listSets().then(setAllSets);
+  }, []);
 
   useEffect(() => {
     loadRecord();
@@ -98,6 +105,29 @@ export default function RecordScorePage() {
     }
   };
 
+  const saveCriteriaSet = async () => {
+    if (!record || !pendingSetId || pendingSetId === record.criteria_set_id) {
+      setEditingSet(false);
+      return;
+    }
+    setError("");
+    try {
+      await RecordsApi.update(record.id, { criteria_set_id: pendingSetId });
+      setSession(null);
+      setEditingSet(false);
+      await loadRecord();
+    } catch (err: any) {
+      setError(err?.response?.data?.detail ?? "Không đổi được bộ tiêu chí");
+    }
+  };
+
+  const deleteSession = async () => {
+    if (!session) return;
+    if (!confirm("Xoá phiên chấm điểm này? Bạn có thể tạo phiên mới ngay sau đó.")) return;
+    await ScoringApi.delete(session.id);
+    setSession(null);
+  };
+
   const seek = (t: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = t;
@@ -118,7 +148,34 @@ export default function RecordScorePage() {
     <div className="score-layout">
       <section className="card audio-panel">
         <h2>{record.original_filename}</h2>
-        <p className="muted">Bộ tiêu chí: {record.criteria_set.name}</p>
+        {editingSet ? (
+          <div className="field-row inline-edit">
+            <select value={pendingSetId} onChange={(e) => setPendingSetId(e.target.value)}>
+              {allSets.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <button onClick={saveCriteriaSet}>Lưu</button>
+            <button className="secondary" onClick={() => setEditingSet(false)}>
+              Huỷ
+            </button>
+          </div>
+        ) : (
+          <p className="muted">
+            Bộ tiêu chí: {record.criteria_set.name}{" "}
+            <button
+              className="link-btn"
+              onClick={() => {
+                setPendingSetId(record.criteria_set_id);
+                setEditingSet(true);
+              }}
+            >
+              Đổi
+            </button>
+          </p>
+        )}
         <p className="muted">Trạng thái: {record.status}</p>
 
         {record.status === "fetching" && <p>Đang tải ghi âm từ URL, vui lòng chờ...</p>}
@@ -262,8 +319,13 @@ export default function RecordScorePage() {
                 <strong>{session.total_score ?? "-"}</strong>
               </div>
               <div>Xếp loại: <strong>{session.classification ?? "-"}</strong></div>
-              {!readOnly && <button onClick={complete}>Hoàn tất chấm điểm</button>}
-              {readOnly && <span className="badge badge-transcribed">Đã hoàn tất</span>}
+              <div>
+                {!readOnly && <button onClick={complete}>Hoàn tất chấm điểm</button>}
+                {readOnly && <span className="badge badge-transcribed">Đã hoàn tất</span>}
+                <button className="secondary" onClick={deleteSession}>
+                  Xoá phiên chấm điểm này
+                </button>
+              </div>
             </div>
           </>
         )}

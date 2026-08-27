@@ -114,6 +114,16 @@ def update_score_item(session_id: str, criterion_id: str, payload: schemas.Score
     return item
 
 
+@router.delete("/scoring-sessions/{session_id}")
+def delete_scoring_session(session_id: str, db: Session = Depends(get_db)):
+    session = db.get(models.ScoringSession, session_id)
+    if not session:
+        raise HTTPException(404, "Session not found")
+    db.delete(session)
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/scoring-sessions/{session_id}/complete", response_model=schemas.ScoringSessionOut)
 def complete_scoring_session(session_id: str, db: Session = Depends(get_db)):
     session = db.get(models.ScoringSession, session_id)

@@ -458,6 +458,29 @@ button.danger:hover:not(:disabled) {
   align-items: start;
 }
 
+.link-btn {
+  display: inline;
+  background: none;
+  color: var(--primary);
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.link-btn:hover:not(:disabled) {
+  background: none;
+  color: var(--primary-hover);
+  box-shadow: none;
+}
+
+.inline-edit {
+  margin-bottom: 10px;
+}
+
 .audio-panel audio {
   border-radius: var(--radius-sm);
   margin-top: 4px;

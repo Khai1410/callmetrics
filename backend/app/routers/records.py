@@ -289,6 +289,23 @@ def get_record(record_id: str, db: Session = Depends(get_db)):
     return record
 
 
+@router.patch("/records/{record_id}", response_model=schemas.RecordOut)
+def update_record(record_id: str, payload: schemas.RecordUpdate, db: Session = Depends(get_db)):
+    record = db.get(models.Record, record_id)
+    if not record:
+        raise HTTPException(404, "Record not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "criteria_set_id" in data:
+        criteria_set = db.get(models.CriteriaSet, data["criteria_set_id"])
+        if not criteria_set:
+            raise HTTPException(404, "Criteria set không tồn tại")
+    for k, v in data.items():
+        setattr(record, k, v)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
 @router.get("/records/{record_id}/audio")
 def get_record_audio(record_id: str, db: Session = Depends(get_db)):
     record = db.get(models.Record, record_id)

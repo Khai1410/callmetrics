@@ -88,6 +88,11 @@ class RecordFromUrlCreate(BaseModel):
     filename: Optional[str] = None
 
 
+class RecordUpdate(BaseModel):
+    criteria_set_id: Optional[str] = None
+    uploaded_by: Optional[str] = None
+
+
 class RecordOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str

@@ -41,6 +41,8 @@ export const RecordsApi = {
       .then((r) => r.data),
   audioUrl: (id: string) => `/api/records/${id}/audio`,
   delete: (id: string) => api.delete(`/records/${id}`),
+  update: (id: string, payload: { criteria_set_id?: string; uploaded_by?: string }) =>
+    api.patch<RecordItem>(`/records/${id}`, payload).then((r) => r.data),
 };
 
 export const ScoringApi = {
@@ -55,6 +57,7 @@ export const ScoringApi = {
       .patch(`/scoring-sessions/${sessionId}/items/${criterionId}`, payload)
       .then((r) => r.data),
   complete: (id: string) => api.post<ScoringSession>(`/scoring-sessions/${id}/complete`).then((r) => r.data),
+  delete: (id: string) => api.delete(`/scoring-sessions/${id}`),
 };
 
 export default api;
