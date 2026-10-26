@@ -32,7 +32,25 @@ Lần đầu transcribe một bản ghi, container backend sẽ tải model Whis
 2. Copy `.env.example` thành `.env`, điền vào `ANTHROPIC_API_KEY=sk-ant-...`.
 3. Chạy lại `deploy.bat` (hoặc `docker compose up -d --build`).
 
-Không điền key thì app vẫn chạy bình thường, chỉ là quay về chấm bằng rule từ khóa (như bản trước) cho các tiêu chí đối chiếu được, còn lại để QA tự chấm tay.
+### Hoặc: chấm bằng AI chạy local (Ollama, miễn phí)
+
+Không muốn tốn phí API thì có thể chạy model AI ngay trên máy qua [Ollama](https://ollama.com) (chạy sẵn trong Docker, không cần cài thêm gì). Thêm vào `.env`:
+
+```
+LLM_PROVIDER=ollama
+COMPOSE_PROFILES=ollama
+OLLAMA_MODEL=qwen2.5:7b
+```
+
+rồi chạy lại `deploy.bat`. Lần đầu sẽ tự tải model (~4.7GB với `qwen2.5:7b`). Đánh đổi so với Claude:
+
+- **Chậm hơn nhiều** nếu máy không có GPU: mỗi lần chấm có thể mất vài phút đến hơn 10 phút trên CPU laptop (nút "Tạo phiên chấm điểm" sẽ chờ trong lúc đó). `qwen2.5:3b` nhanh hơn ~2 lần nhưng chấm kém hơn.
+- **Chấm kém chính xác hơn** Claude, nhất là với tiêu chí cần hiểu ngữ cảnh — QA càng cần đọc kỹ bằng chứng AI trích dẫn.
+- Cần RAM: model 7B + Whisper `medium` dùng khoảng 8–10GB.
+
+Muốn quay về Claude: đổi `LLM_PROVIDER=anthropic` và xoá dòng `COMPOSE_PROFILES`.
+
+Không cấu hình AI thì app vẫn chạy bình thường, chỉ là quay về chấm bằng rule từ khóa (như bản trước) cho các tiêu chí đối chiếu được, còn lại để QA tự chấm tay.
 
 Dữ liệu tiêu chí trong `backend/app/seed/seed_data.json` (chuyển thể từ `KHUNG CHẤM ĐIỂM.xlsx`, 2 bộ **CALL IN** và **CALL OUT**) được tự động nạp vào DB khi backend khởi động lần đầu (không ghi đè nếu đã tồn tại).
 

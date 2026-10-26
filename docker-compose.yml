@@ -24,8 +24,13 @@ services:
       WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
       WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
       WHISPER_INITIAL_PROMPT: ${WHISPER_INITIAL_PROMPT:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+      OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-16384}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-900}
     volumes:
       - ./storage/audio:/data/audio
       - whisper_cache:/root/.cache/huggingface
@@ -45,6 +50,40 @@ services:
     ports:
       - "${FRONTEND_PORT:-8081}:80"
 
+  # Local LLM for AI scoring (no API cost). Only started when the "ollama"
+  # profile is active, e.g. COMPOSE_PROFILES=ollama in .env.
+  ollama:
+    image: ollama/ollama:0.12.6
+    restart: unless-stopped
+    profiles: ["ollama"]
+    environment:
+      OLLAMA_NUM_PARALLEL: 1
+      OLLAMA_KEEP_ALIVE: 30m
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # Uncomment to call Ollama from the host (e.g. `ollama run` tests):
+    # ports:
+    #   - "11434:11434"
+
+  # One-shot: downloads OLLAMA_MODEL into the ollama_models volume (a few GB
+  # the first time, a no-op afterwards), then exits.
+  ollama-pull:
+    image: ollama/ollama:0.12.6
+    profiles: ["ollama"]
+    restart: "no"
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["ollama", "pull", "${OLLAMA_MODEL:-qwen2.5:7b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
 volumes:
   db_data:
   whisper_cache:
+  ollama_models:

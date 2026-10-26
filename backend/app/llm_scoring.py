@@ -1,10 +1,13 @@
-"""AI-based scoring: sends the call transcript plus the criteria rubric to
-Claude and asks it to score every criterion in one pass, so QA can review and
+"""AI-based scoring: sends the call transcript plus the criteria rubric to an
+LLM and asks it to score every criterion in one pass, so QA can review and
 copy the result into the company portal instead of scoring by hand.
 
-This only runs when ANTHROPIC_API_KEY is configured. If it is not set, or the
-call fails for any reason, callers should fall back to the rule-based
-scoring_engine so the app stays usable without an API key.
+Two providers, picked by LLM_PROVIDER:
+- "anthropic" (default): Claude via the Anthropic API, needs ANTHROPIC_API_KEY.
+- "ollama": a local model served by Ollama (no API cost), see OLLAMA_* vars.
+
+If the provider is not configured, or the call fails for any reason, callers
+should fall back to the rule-based scoring_engine so the app stays usable.
 """
 from __future__ import annotations
 
@@ -13,9 +16,21 @@ import logging
 import os
 from typing import Any, Optional
 
+import requests
+
 logger = logging.getLogger(__name__)
 
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
+
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-opus-5")
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+# Ollama's default context window (a few thousand tokens) silently truncates
+# a long transcript + rubric, so it must be raised explicitly.
+OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "16384"))
+# CPU-only inference of a 7B model can take several minutes per call.
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "900"))
 
 SYSTEM_PROMPT = (
     "Bạn là một chuyên gia QA (Quality Assurance) giàu kinh nghiệm trong lĩnh vực "
@@ -42,7 +57,9 @@ def _nearest_valid_score(value: float, options: list[dict[str, Any]]) -> float:
     return min(valid, key=lambda v: abs(v - value))
 
 
-def _build_schema(call_content_types: list[str], failed_point_tags: list[str]) -> dict[str, Any]:
+def _build_schema(
+    criterion_ids: list[str], call_content_types: list[str], failed_point_tags: list[str]
+) -> dict[str, Any]:
     call_type_schema: dict[str, Any] = {"type": "string"}
     if call_content_types:
         call_type_schema = {"type": "string", "enum": [*call_content_types, ""]}
@@ -59,7 +76,8 @@ def _build_schema(call_content_types: list[str], failed_point_tags: list[str]) -
                 "items": {
                     "type": "object",
                     "properties": {
-                        "criterion_id": {"type": "string"},
+                        # Small local models tend to mangle long UUIDs when copying them.
+                        "criterion_id": {"type": "string", "enum": criterion_ids},
                         "score": {"type": "number"},
                         "evidence": {"type": "string"},
                     },
@@ -77,7 +95,70 @@ def _build_schema(call_content_types: list[str], failed_point_tags: list[str]) -
 
 
 def is_configured() -> bool:
+    if LLM_PROVIDER == "ollama":
+        return bool(OLLAMA_BASE_URL and OLLAMA_MODEL)
     return bool(os.getenv("ANTHROPIC_API_KEY"))
+
+
+def _call_anthropic(user_content: str, schema: dict[str, Any]) -> Optional[str]:
+    import anthropic
+
+    client = anthropic.Anthropic()
+    try:
+        response = client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=8000,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_content}],
+            output_config={"format": {"type": "json_schema", "schema": schema}},
+        )
+    except anthropic.APIStatusError as exc:
+        logger.error("AI scoring failed (API status %s): %s", exc.status_code, exc.message)
+        return None
+    except anthropic.APIConnectionError as exc:
+        logger.error("AI scoring failed (connection error): %s", exc)
+        return None
+    except Exception as exc:  # noqa: BLE001
+        logger.error("AI scoring failed (unexpected error): %s", exc)
+        return None
+
+    if response.stop_reason == "refusal":
+        logger.warning("AI scoring refused by the model")
+        return None
+
+    return next((b.text for b in response.content if b.type == "text"), None)
+
+
+def _call_ollama(user_content: str, schema: dict[str, Any]) -> Optional[str]:
+    try:
+        resp = requests.post(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            json={
+                "model": OLLAMA_MODEL,
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
+                ],
+                # Ollama constrains decoding to this JSON schema.
+                "format": schema,
+                "stream": False,
+                "options": {"temperature": 0, "num_ctx": OLLAMA_NUM_CTX},
+            },
+            timeout=(10, OLLAMA_TIMEOUT),
+        )
+    except requests.RequestException as exc:
+        logger.error("AI scoring failed (Ollama at %s unreachable): %s", OLLAMA_BASE_URL, exc)
+        return None
+
+    if resp.status_code != 200:
+        # 404 here usually means the model has not been pulled yet.
+        logger.error("AI scoring failed (Ollama status %s): %s", resp.status_code, resp.text[:500])
+        return None
+
+    data = resp.json()
+    if data.get("done_reason") == "length":
+        logger.warning("Ollama output hit the length limit, JSON may be truncated")
+    return (data.get("message") or {}).get("content")
 
 
 def score_with_ai(
@@ -95,10 +176,6 @@ def score_with_ai(
         return None
     if not transcript_text or not transcript_text.strip():
         return None
-
-    import anthropic
-
-    client = anthropic.Anthropic()
 
     criteria_payload = [
         {
@@ -130,38 +207,19 @@ def score_with_ai(
         "cuộc gọi, phù hợp để copy thẳng vào báo cáo QA."
     )
 
-    schema = _build_schema(call_content_types, failed_point_tags)
+    schema = _build_schema([c.id for c in criteria], call_content_types, failed_point_tags)
 
-    try:
-        response = client.messages.create(
-            model=ANTHROPIC_MODEL,
-            max_tokens=8000,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_content}],
-            output_config={"format": {"type": "json_schema", "schema": schema}},
-        )
-    except anthropic.APIStatusError as exc:
-        logger.error("AI scoring failed (API status %s): %s", exc.status_code, exc.message)
-        return None
-    except anthropic.APIConnectionError as exc:
-        logger.error("AI scoring failed (connection error): %s", exc)
-        return None
-    except Exception as exc:  # noqa: BLE001
-        logger.error("AI scoring failed (unexpected error): %s", exc)
-        return None
-
-    if response.stop_reason == "refusal":
-        logger.warning("AI scoring refused by the model")
-        return None
-
-    text = next((b.text for b in response.content if b.type == "text"), None)
+    if LLM_PROVIDER == "ollama":
+        text = _call_ollama(user_content, schema)
+    else:
+        text = _call_anthropic(user_content, schema)
     if not text:
         return None
 
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
-        logger.error("AI scoring returned invalid JSON")
+        logger.error("AI scoring returned invalid JSON: %s", text[:500])
         return None
 
     criteria_by_id = {c.id: c for c in criteria}
